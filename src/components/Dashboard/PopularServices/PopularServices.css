@@ -1,0 +1,91 @@
+.popular-services__header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.popular-services__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.popular-services__subtitle {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.popular-services__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.popular-services__item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.popular-services__item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popular-services__item-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.popular-services__rank {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.popular-services__name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.popular-services__orders {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.popular-services__progress {
+  width: 100%;
+  height: 6px;
+  background: var(--color-bg);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.popular-services__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #2563EB, #3B82F6);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease;
+}
+
+.popular-services__item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popular-services__revenue {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.popular-services__percent {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}

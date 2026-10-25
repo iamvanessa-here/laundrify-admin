@@ -1,0 +1,61 @@
+.revenue-chart {
+  flex: 1;
+}
+
+.revenue-chart__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+  gap: var(--spacing-md);
+}
+
+.revenue-chart__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.revenue-chart__subtitle {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.revenue-chart__legend {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.revenue-chart__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.revenue-chart__legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+
+.revenue-chart__body {
+  width: 100%;
+  overflow: hidden;
+}
+
+.revenue-chart__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .revenue-chart__header {
+    flex-direction: column;
+  }
+}
