@@ -3,16 +3,12 @@ import Sidebar from './Sidebar/Sidebar';
 import Header from './Header/Header';
 import './Layout.css';
 
+/* --- PERUBAHAN: Hapus props title dan subtitle --- */
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <div className="layout">
@@ -23,9 +19,7 @@ const Layout = ({ children }) => {
           {children}
         </main>
       </div>
-      {sidebarOpen && (
-        <div className="layout__overlay" onClick={closeSidebar} />
-      )}
+      {sidebarOpen && <div className="layout__overlay" onClick={closeSidebar} />}
     </div>
   );
 };
