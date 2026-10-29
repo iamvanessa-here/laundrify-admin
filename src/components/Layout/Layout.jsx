@@ -3,7 +3,6 @@ import Sidebar from './Sidebar/Sidebar';
 import Header from './Header/Header';
 import './Layout.css';
 
-/* --- PERUBAHAN: Hapus props title dan subtitle --- */
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
