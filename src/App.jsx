@@ -6,6 +6,7 @@ import Layout from './components/Layout/Layout';
 import Ringkasan from './pages/Ringkasan/Ringkasan';
 import Pesanan from './pages/Pesanan/Pesanan';
 import Pelanggan from './pages/Pelanggan/Pelanggan';
+import Layanan from './pages/Layanan/Layanan';
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
           path="/" 
           element={
             <Layout>
-              <Ringkasan />
+              <Ringkasan/>
             </Layout>
           } 
         />
@@ -23,7 +24,7 @@ function App() {
           path="/pesanan" 
           element={
             <Layout>
-              <Pesanan />
+              <Pesanan/>
             </Layout>
           } 
         />
@@ -31,7 +32,15 @@ function App() {
           path="/pelanggan" 
           element={
             <Layout>
-              <Pelanggan />
+              <Pelanggan/>
+            </Layout>
+          } 
+        />
+        <Route 
+          path="/layanan" 
+          element={
+            <Layout>
+              <Layanan/>
             </Layout>
           } 
         />

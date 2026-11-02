@@ -192,7 +192,7 @@ const Pesanan = () => {
       </div>
 
       {ordersError && (
-        <p role="alert">Gagal memuat pesanan: {ordersError}</p>
+        <p role="alert">Gagal memuat pesanan.</p>
       )}
 
       <Card className="pesanan__table-card" padding="md">
@@ -286,35 +286,20 @@ const Pesanan = () => {
         ) : (
           !ordersLoading && (
             <div className="empty-state">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                <rect
-                  x="8"
-                  y="12"
-                  width="32"
-                  height="28"
-                  rx="4"
-                  stroke="#94A3B8"
-                  strokeWidth="2"
-                />
-                <path d="M8 18H40" stroke="#94A3B8" strokeWidth="2" />
-                <path
-                  d="M18 26H30"
-                  stroke="#94A3B8"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M18 32H26"
-                  stroke="#94A3B8"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <p className="empty-state__text">
-                Tidak ada pesanan yang cocok dengan pencarian "{searchTerm}" dan
-                status "{statusFilter}".
-              </p>
-            </div>
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <rect x="8" y="12" width="32" height="28" rx="4" stroke="#94A3B8" strokeWidth="2" />
+              <path d="M8 18H40" stroke="#94A3B8" strokeWidth="2" />
+              <path d="M18 26H30" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" />
+              <path d="M18 32H26" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <p className="empty-state__text">
+              {searchTerm 
+                ? `Kami tidak menemukan pesanan dengan kata kunci "${searchTerm}". Coba periksa kembali ejaan atau ID pesanan.`
+                : statusFilter !== 'Semua'
+                ? `Saat ini belum ada pesanan dengan status "${statusFilter}".`
+                : "Belum ada pesanan yang tercatat. Yuk, tambahkan pesanan pertama Anda!"}
+            </p>
+          </div>
           )
         )}
       </Card>
