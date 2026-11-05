@@ -62,7 +62,8 @@ const Pesanan = () => {
         if (!result.success) {
           throw new Error(result.message || 'Gagal mengambil pesanan');
         }
-        setOrders(result.data.map((order) => formatApiOrder(order)));
+
+        setOrders((result.data || []).map((order) => formatApiOrder(order)));
       })
       .catch((error) => setOrdersError(error.message))
       .finally(() => setOrdersLoading(false));
@@ -71,6 +72,9 @@ const Pesanan = () => {
   const handleAddOrder = async (newOrder) => {
     try {
       const amount = Number(String(newOrder.amount).replace(/[^\d]/g, ''));
+      const weight = Number.parseFloat(
+        String(newOrder.weight).replace(',', '.')
+      );
 
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -81,17 +85,20 @@ const Pesanan = () => {
           date: newOrder.date,
           status: newOrder.status,
           amount,
+          weight,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error || result.message || 'Gagal menyimpan pesanan');
+        throw new Error(
+          result.error || result.message || 'Gagal menyimpan pesanan'
+        );
       }
 
       setOrders((currentOrders) => [
-        formatApiOrder(result.data, parseFloat(newOrder.weight)),
+        formatApiOrder(result.data, result.data.weight ?? weight),
         ...currentOrders,
       ]);
       setIsAddModalOpen(false);
@@ -113,13 +120,31 @@ const Pesanan = () => {
     }
   };
 
-  const handleSaveStatus = (id, newStatus) => {
-    setOrders((currentOrders) =>
-      currentOrders.map((order) =>
-        order.id === id ? { ...order, status: newStatus } : order
-      )
-    );
-    setEditingOrder(null);
+  const handleSaveStatus = async (id, newStatus) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error || result.message || 'Gagal memperbarui status'
+        );
+      }
+
+      setOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order.id === id ? formatApiOrder(result.data) : order
+        )
+      );
+      setEditingOrder(null);
+    } catch (error) {
+      window.alert(`Gagal memperbarui status: ${error.message}`);
+    }
   };
 
   const filteredOrders = orders.filter((order) => {

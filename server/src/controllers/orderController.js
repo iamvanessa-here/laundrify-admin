@@ -1,5 +1,12 @@
 const orderModel = require('../models/orderModel');
 
+const allowedStatuses = [
+  'Menunggu',
+  'Dalam Proses',
+  'Selesai',
+  'Dibatalkan',
+];
+
 const success = (res, code, message, data = null) =>
   res.status(code).json({ success: true, message, data });
 
@@ -12,55 +19,79 @@ const getAllOrders = async (req, res) => {
     success(res, 200, 'Berhasil mengambil semua pesanan', orders);
   } catch (error) {
     console.error('[getAllOrders]', error);
-    fail(res, 500, 'Server Error', error.message);
+    fail(res, 500, 'Server Error');
   }
 };
 
 const createOrder = async (req, res) => {
   try {
-    const { customer, service, date, status, amount } = req.body;
+    const { customer, service, date, status, amount, weight } = req.body || {};
+    const parsedAmount = Number(amount);
+    const parsedWeight = Number.parseFloat(String(weight ?? 0));
 
-    if (typeof customer !== 'string' || customer.trim() === '') {
-      return fail(res, 400, 'Validasi gagal', 'customer wajib diisi');
+    if (typeof customer !== 'string' || !customer.trim()) {
+      return fail(res, 400, 'Validasi gagal', 'Nama pelanggan wajib diisi');
     }
 
-    if (typeof service !== 'string' || service.trim() === '') {
-      return fail(res, 400, 'Validasi gagal', 'service wajib diisi');
+    if (typeof service !== 'string' || !service.trim()) {
+      return fail(res, 400, 'Validasi gagal', 'Layanan wajib diisi');
     }
 
-    if (typeof date !== 'string' || date.trim() === '') {
-      return fail(res, 400, 'Validasi gagal', 'date wajib diisi');
+    if (!date) {
+      return fail(res, 400, 'Validasi gagal', 'Tanggal wajib diisi');
     }
 
-    const validStatuses = ['Menunggu', 'Dalam Proses', 'Selesai'];
-    if (!validStatuses.includes(status)) {
-      return fail(
-        res,
-        400,
-        'Validasi gagal',
-        'status harus Menunggu, Dalam Proses, atau Selesai'
-      );
+    if (!allowedStatuses.includes(status)) {
+      return fail(res, 400, 'Validasi gagal', 'Status pesanan tidak valid');
     }
 
-    if (
-      amount === undefined ||
-      amount === null ||
-      amount === '' ||
-      !Number.isFinite(Number(amount)) ||
-      Number(amount) < 0
-    ) {
-      return fail(res, 400, 'Validasi gagal', 'amount harus angka minimal 0');
+    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
+      return fail(res, 400, 'Validasi gagal', 'Jumlah harus angka >= 0');
     }
 
-    const order = await orderModel.createOrder(req.body);
+    if (!Number.isFinite(parsedWeight) || parsedWeight < 0) {
+      return fail(res, 400, 'Validasi gagal', 'Berat harus angka >= 0');
+    }
+
+    const order = await orderModel.createOrder({
+      customer,
+      service,
+      date,
+      status,
+      amount: parsedAmount,
+      weight: parsedWeight,
+    });
+
     success(res, 201, 'Pesanan berhasil dibuat', order);
   } catch (error) {
     console.error('[createOrder]', error);
-    fail(res, 500, 'Server Error', error.message);
+    fail(res, 500, 'Server Error');
+  }
+};
+
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body || {};
+
+    if (!allowedStatuses.includes(status)) {
+      return fail(res, 400, 'Validasi gagal', 'Status pesanan tidak valid');
+    }
+
+    const order = await orderModel.updateOrderStatus(req.params.id, status);
+
+    if (!order) {
+      return fail(res, 404, 'Pesanan tidak ditemukan');
+    }
+
+    success(res, 200, 'Status pesanan berhasil diperbarui', order);
+  } catch (error) {
+    console.error('[updateOrderStatus]', error);
+    fail(res, 500, 'Server Error');
   }
 };
 
 module.exports = {
   getAllOrders,
   createOrder,
+  updateOrderStatus,
 };
