@@ -181,10 +181,9 @@ export const customerActivity = [
 ];
 
 export const navigationItems = [
-  { id: 'ringkasan', label: 'Ringkasan', icon: 'dashboard', path: '/' },
   { id: 'pesanan', label: 'Pesanan', icon: 'orders', path: '/pesanan' },
-  { id: 'pelanggan', label: 'Pelanggan', icon: 'customers', path: '/pelanggan' },
   { id: 'layanan', label: 'Layanan', icon: 'services', path: '/layanan' },
+  { id: 'pelanggan', label: 'Pelanggan', icon: 'customers', path: '/pelanggan' },
 ];
 
 // Tambahkan di bagian bawah src/data/mockData.js

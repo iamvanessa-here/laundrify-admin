@@ -14,21 +14,22 @@ const Pelanggan = () => {
   const [orders] = useState(mockOrders);
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState('terbaru'); // 'terbaru' | 'terlama'
+  const [sortOrder, setSortOrder] = useState('terbaru');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedMonth, setSelectedMonth] = useState('2026-10'); // Untuk statistik Pelanggan Baru
+  const [selectedMonth, setSelectedMonth] = useState('2026-10');
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  
+  // State untuk notifikasi toast
+  const [toast, setToast] = useState(null);
 
-  // --- Helper: Mendapatkan tanggal transaksi terbaru pelanggan ---
   const getLatestTransactionDate = (customerId) => {
     const custOrders = orders.filter(o => o.customerId === customerId && o.status === 'Selesai');
     if (custOrders.length === 0) return null;
     return new Date(Math.max(...custOrders.map(o => new Date(o.date))));
   };
 
-  // --- 1. Logika Pencarian & Pengurutan ---
   const filteredAndSortedCustomers = useMemo(() => {
     let result = customers.filter(c => 
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,81 +40,77 @@ const Pelanggan = () => {
     result.sort((a, b) => {
       const dateA = getLatestTransactionDate(a.id);
       const dateB = getLatestTransactionDate(b.id);
-
       if (!dateA && !dateB) return 0;
-      if (!dateA) return 1; // Tidak ada transaksi -> paling bawah
+      if (!dateA) return 1;
       if (!dateB) return -1;
-
       return sortOrder === 'terbaru' ? dateB - dateA : dateA - dateB;
     });
 
     return result;
   }, [customers, orders, searchTerm, sortOrder]);
 
-  // Reset ke halaman 1 jika pencarian/pengurutan berubah
   const handleSearchChange = (val) => { setSearchTerm(val); setCurrentPage(1); };
   const handleSortChange = (val) => { setSortOrder(val); setCurrentPage(1); };
 
-  // --- 2. Logika Paginasi ---
   const totalPages = Math.ceil(filteredAndSortedCustomers.length / ITEMS_PER_PAGE);
   const paginatedCustomers = filteredAndSortedCustomers.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Jika halaman saat ini melebihi total halaman setelah filter, kembali ke halaman valid
   if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
 
-  // --- 3. Perhitungan Statistik Dinamis ---
   const stats = useMemo(() => {
     const total = customers.length;
-    
-    // Pelanggan Baru (berdasarkan bulan yang dipilih)
     const newCustomers = customers.filter(c => c.regDate.startsWith(selectedMonth)).length;
-    
-    // Pelanggan Kembali (>= 2 pesanan)
     const returning = customers.filter(c => orders.filter(o => o.customerId === c.id).length >= 2).length;
     const returningPercent = total > 0 ? ((returning / total) * 100).toFixed(1) : 0;
-    
-    // Pesanan Aktif (Status "Dalam Proses")
     const activeOrders = orders.filter(o => o.status === 'Dalam Proses').length;
-
     return { total, newCustomers, returning, returningPercent, activeOrders };
   }, [customers, orders, selectedMonth]);
 
-  // --- Handlers ---
   const handleAddCustomer = (newCustomer) => {
     setCustomers([newCustomer, ...customers]);
     setIsAddModalOpen(false);
   };
 
+  // --- TAMBAHAN: Fungsi untuk update data pelanggan ---
+  const handleUpdateCustomer = (customerId, updatedData) => {
+    // Simulasi delay API call
+    setTimeout(() => {
+      setCustomers(prevCustomers => 
+        prevCustomers.map(cust => 
+          cust.id === customerId ? { ...cust, ...updatedData } : cust
+        )
+      );
+      setToast({ type: 'success', message: 'Data pelanggan berhasil diperbarui!' });
+      setTimeout(() => setToast(null), 3000);
+    }, 500);
+  };
+
   return (
     <div className="pelanggan">
-      {/* Statistik Dashboard */}
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`toast toast--${toast.type}`}>
+          {toast.type === 'success' ? '✓' : '⚠'} {toast.message}
+        </div>
+      )}
+
       <div className="stats-grid">
         <StatCard title="Total Pelanggan" value={stats.total} icon="users" color="#2563EB" bg="#DBEAFE" />
         <StatCard 
-          title="Pelanggan Baru" 
-          value={stats.newCustomers} 
-          subtitle={`Bulan ${selectedMonth}`}
-          icon="user-plus" 
-          color="#10B981" 
-          bg="#D1FAE5"
-          selectMonth={selectedMonth}
-          onMonthChange={setSelectedMonth}
+          title="Pelanggan Baru" value={stats.newCustomers} subtitle={`Bulan ${selectedMonth}`}
+          icon="user-plus" color="#10B981" bg="#D1FAE5"
+          selectMonth={selectedMonth} onMonthChange={setSelectedMonth}
         />
         <StatCard 
-          title="Pelanggan Kembali" 
-          value={stats.returning} 
-          subtitle={`${stats.returningPercent}% dari total`}
-          icon="refresh" 
-          color="#8B5CF6" 
-          bg="#EDE9FE" 
+          title="Pelanggan Kembali" value={stats.returning} subtitle={`${stats.returningPercent}% dari total`}
+          icon="refresh" color="#8B5CF6" bg="#EDE9FE" 
         />
         <StatCard title="Pesanan Aktif" value={stats.activeOrders} icon="clock" color="#F59E0B" bg="#FEF3C7" />
       </div>
 
-      {/* Action Bar */}
       <div className="action-bar">
         <div className="search-sort-group">
           <div className="search-box">
@@ -122,17 +119,11 @@ const Pelanggan = () => {
               <path d="M12 12L16 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <input 
-              type="text" 
-              placeholder="Cari nama, email, atau WhatsApp..." 
-              value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              type="text" placeholder="Cari nama, email, atau WhatsApp..." 
+              value={searchTerm} onChange={(e) => handleSearchChange(e.target.value)}
             />
           </div>
-          <select 
-            className="sort-select" 
-            value={sortOrder} 
-            onChange={(e) => handleSortChange(e.target.value)}
-          >
+          <select className="sort-select" value={sortOrder} onChange={(e) => handleSortChange(e.target.value)}>
             <option value="terbaru">Transaksi Terbaru</option>
             <option value="terlama">Transaksi Terlama</option>
           </select>
@@ -145,7 +136,6 @@ const Pelanggan = () => {
         </button>
       </div>
 
-      {/* Tabel Pelanggan */}
       <Card className="table-card" padding="md">
         <div className="table-header">
           <h3 className="table-title">Pelanggan Terdaftar</h3>
@@ -177,7 +167,11 @@ const Pelanggan = () => {
                     <td>{custOrders.length}</td>
                     <td className="font-medium">Rp {totalSpent.toLocaleString('id-ID')}</td>
                     <td>
-                      <button className="btn-icon" title="Lihat Detail" onClick={(e) => { e.stopPropagation(); setSelectedCustomer(cust); }}>
+                      <button 
+                        className="btn-icon" 
+                        title="Lihat & Edit Detail" 
+                        onClick={(e) => { e.stopPropagation(); setSelectedCustomer(cust); }}
+                      >
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 3C4.5 3 2 8 2 8C2 8 4.5 13 8 13C11.5 13 14 8 14 8C14 8 11.5 3 8 3Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
                           <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.5"/>
@@ -194,20 +188,11 @@ const Pelanggan = () => {
           </table>
         </div>
 
-        <Pagination 
-          currentPage={currentPage} 
-          totalPages={totalPages} 
-          onPageChange={setCurrentPage} 
-        />
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
       </Card>
 
-      {/* Modals */}
       {isAddModalOpen && (
-        <AddCustomerModal 
-          onClose={() => setIsAddModalOpen(false)} 
-          onAdd={handleAddCustomer} 
-          existingCustomers={customers}
-        />
+        <AddCustomerModal onClose={() => setIsAddModalOpen(false)} onAdd={handleAddCustomer} existingCustomers={customers} />
       )}
       
       {selectedCustomer && (
@@ -215,6 +200,7 @@ const Pelanggan = () => {
           customer={selectedCustomer} 
           orders={orders.filter(o => o.customerId === selectedCustomer.id)}
           onClose={() => setSelectedCustomer(null)} 
+          onUpdate={handleUpdateCustomer} // <-- TAMBAHAN: Pass fungsi update
         />
       )}
     </div>
