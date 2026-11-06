@@ -34,6 +34,7 @@ const Pelanggan = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState('');
+  const [toast, setToast] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('terbaru');
@@ -156,9 +157,7 @@ const Pelanggan = () => {
     try {
       const response = await fetch(CUSTOMERS_API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCustomer),
       });
 
@@ -179,8 +178,37 @@ const Pelanggan = () => {
     }
   };
 
+  const handleUpdateCustomer = (customerId, updatedData) => {
+    setCustomers((currentCustomers) =>
+      currentCustomers.map((customer) =>
+        customer.id === customerId
+          ? { ...customer, ...updatedData }
+          : customer
+      )
+    );
+
+    setSelectedCustomer((currentCustomer) =>
+      currentCustomer?.id === customerId
+        ? { ...currentCustomer, ...updatedData }
+        : currentCustomer
+    );
+
+    setToast({
+      type: 'success',
+      message: 'Data pelanggan berhasil diperbarui!',
+    });
+
+    setTimeout(() => setToast(null), 3000);
+  };
+
   return (
     <div className="pelanggan">
+      {toast && (
+        <div className={`toast toast--${toast.type}`}>
+          ✓ {toast.message}
+        </div>
+      )}
+
       <div className="stats-grid">
         <StatCard
           title="Total Pelanggan"
@@ -315,7 +343,7 @@ const Pelanggan = () => {
 
                   const totalSpent = customerOrders
                     .filter((order) => order.status === 'Selesai')
-                    .reduce((sum, order) => sum + order.amount, 0);
+                    .reduce((sum, order) => sum + Number(order.amount || 0), 0);
 
                   return (
                     <tr
@@ -333,7 +361,7 @@ const Pelanggan = () => {
                       <td>
                         <button
                           className="btn-icon"
-                          title="Lihat Detail"
+                          title="Lihat & Edit Detail"
                           onClick={(event) => {
                             event.stopPropagation();
                             setSelectedCustomer(customer);
@@ -401,6 +429,7 @@ const Pelanggan = () => {
           customer={selectedCustomer}
           orders={getCustomerOrders(orders, selectedCustomer.name)}
           onClose={() => setSelectedCustomer(null)}
+          onUpdate={handleUpdateCustomer}
         />
       )}
     </div>

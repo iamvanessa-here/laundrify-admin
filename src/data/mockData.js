@@ -181,10 +181,9 @@ export const customerActivity = [
 ];
 
 export const navigationItems = [
-  { id: 'ringkasan', label: 'Ringkasan', icon: 'dashboard', path: '/' },
   { id: 'pesanan', label: 'Pesanan', icon: 'orders', path: '/pesanan' },
-  { id: 'pelanggan', label: 'Pelanggan', icon: 'customers', path: '/pelanggan' },
   { id: 'layanan', label: 'Layanan', icon: 'services', path: '/layanan' },
+  { id: 'pelanggan', label: 'Pelanggan', icon: 'customers', path: '/pelanggan' },
 ];
 
 // Tambahkan di bagian bawah src/data/mockData.js
@@ -220,3 +219,14 @@ export const mockOrders = [
   // Orders for CUST-010 (1 order, active)
   { id: 'LND-0850', customerId: 'CUST-010', service: 'Cuci Setrika', date: '2026-10-28', status: 'Dalam Proses', amount: 55000 },
 ];
+
+// ===== Pricelist Layanan =====
+export const SERVICE_PRICES = {
+  'Cuci Setrika': { price: 8000, unit: 'kg', minOrder: 3 },
+  'Cuci Lipat': { price: 6000, unit: 'kg', minOrder: 3 },
+  'Setrika Saja': { price: 5000, unit: 'kg', minOrder: 3 },
+  'Seprai': { price: 15000, unit: 'lembar', minOrder: 1 },
+  'Cuci Kilat': { price: 14000, unit: 'kg', minOrder: 3 },
+};
+
+export const SERVICE_LIST = Object.keys(SERVICE_PRICES);
