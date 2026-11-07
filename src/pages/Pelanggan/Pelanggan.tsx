@@ -14,15 +14,28 @@ const ITEMS_PER_PAGE = 10;
 type SortOrder = 'terbaru' | 'terlama';
 type ApiOrder = Order & {
   customer?: string;
+  customerId?: string;
 };
 
 const normalizeName = (name = '') => name.trim().toLowerCase();
 
-const getCustomerOrders = (orders: ApiOrder[], customerName: string) =>
-  orders.filter(
-    (order) =>
-      normalizeName(order.customer || '') === normalizeName(customerName)
-  );
+const getCustomerOrders = (
+  orders: ApiOrder[],
+  customer: Customer,
+  customers: Customer[]
+) =>
+  orders.filter((order) => {
+    if (order.customerId) return order.customerId === customer.id;
+
+    const legacyNameMatches = customers.filter(
+      (item) => normalizeName(item.name) === normalizeName(order.customer || '')
+    );
+
+    return (
+      legacyNameMatches.length === 1 &&
+      legacyNameMatches[0].id === customer.id
+    );
+  });
 
 const getAmountNumber = (amount: number | string | undefined) => {
   if (typeof amount === 'number') return amount;
@@ -31,9 +44,10 @@ const getAmountNumber = (amount: number | string | undefined) => {
 
 const getLatestTransactionDate = (
   orders: ApiOrder[],
-  customerName: string
+  customer: Customer,
+  customers: Customer[]
 ): number | null => {
-  const completedOrders = getCustomerOrders(orders, customerName).filter(
+  const completedOrders = getCustomerOrders(orders, customer, customers).filter(
     (order) => order.status === 'Selesai'
   );
 
@@ -107,8 +121,8 @@ const Pelanggan = () => {
     );
 
     result.sort((a, b) => {
-      const dateA = getLatestTransactionDate(orders, a.name);
-      const dateB = getLatestTransactionDate(orders, b.name);
+      const dateA = getLatestTransactionDate(orders, a, customers);
+      const dateB = getLatestTransactionDate(orders, b, customers);
 
       if (dateA === null && dateB === null) return 0;
       if (dateA === null) return 1;
@@ -143,7 +157,7 @@ const Pelanggan = () => {
     ).length;
 
     const returning = customers.filter(
-      (customer) => getCustomerOrders(orders, customer.name).length >= 2
+      (customer) => getCustomerOrders(orders, customer, customers).length >= 2
     ).length;
 
     const returningPercent =
@@ -226,8 +240,7 @@ const Pelanggan = () => {
       if (oldCustomer && oldCustomer.name !== savedCustomer.name) {
         setOrders((current) =>
           current.map((order) =>
-            normalizeName(order.customer || '') ===
-            normalizeName(oldCustomer.name)
+            order.customerId === customerId
               ? { ...order, customer: savedCustomer.name }
               : order
           )
@@ -378,7 +391,8 @@ const Pelanggan = () => {
                 paginatedCustomers.map((customer) => {
                   const customerOrders = getCustomerOrders(
                     orders,
-                    customer.name
+                    customer,
+                    customers
                   );
                   const totalSpent = customerOrders.reduce(
                     (sum, order) => sum + getAmountNumber(order.amount),
@@ -468,7 +482,7 @@ const Pelanggan = () => {
       {selectedCustomer && (
         <CustomerDetailModal
           customer={selectedCustomer}
-          orders={getCustomerOrders(orders, selectedCustomer.name)}
+          orders={getCustomerOrders(orders, selectedCustomer, customers)}
           onClose={() => setSelectedCustomer(null)}
           onUpdate={handleUpdateCustomer}
         />

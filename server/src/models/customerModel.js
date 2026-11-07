@@ -64,12 +64,12 @@ const updateCustomer = async (id, body) => {
       [name, email, whatsapp, address, id]
     );
 
-    if (existing.name.toLowerCase() !== name.toLowerCase()) {
+    if (existing.name !== name) {
       await dbRun(
         `UPDATE orders
          SET customer = ?
-         WHERE customer = ? COLLATE NOCASE`,
-        [name, existing.name]
+         WHERE customer_id = ?`,
+        [name, id]
       );
     }
 

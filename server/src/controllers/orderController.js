@@ -25,12 +25,27 @@ const getAllOrders = async (req, res) => {
 
 const createOrder = async (req, res) => {
   try {
-    const { customer, service, date, status, amount, weight } = req.body || {};
+    const { customerId, customer, service, date, status, amount, weight } = req.body || {};
     const parsedAmount = Number(amount);
     const parsedWeight = Number.parseFloat(String(weight ?? 0));
 
-    if (typeof customer !== 'string' || !customer.trim()) {
-      return fail(res, 400, 'Validasi gagal', 'Nama pelanggan wajib diisi');
+    if (typeof customerId !== 'string' || !customerId.trim()) {
+      return fail(res, 400, 'Validasi gagal', 'Pilih pelanggan yang terdaftar');
+    }
+
+    const registeredCustomer = await orderModel.findCustomerById(customerId.trim());
+
+    if (!registeredCustomer) {
+      return fail(
+        res,
+        400,
+        'Validasi gagal',
+        'Pelanggan harus terdaftar sebelum membuat pesanan'
+      );
+    }
+
+    if (typeof customer !== 'string' || customer.trim() !== registeredCustomer.name) {
+      return fail(res, 400, 'Validasi gagal', 'Data pelanggan tidak cocok');
     }
 
     if (typeof service !== 'string' || !service.trim()) {
@@ -54,7 +69,8 @@ const createOrder = async (req, res) => {
     }
 
     const order = await orderModel.createOrder({
-      customer,
+      customerId: registeredCustomer.id,
+      customer: registeredCustomer.name,
       service,
       date,
       status,
@@ -65,6 +81,21 @@ const createOrder = async (req, res) => {
     success(res, 201, 'Pesanan berhasil dibuat', order);
   } catch (error) {
     console.error('[createOrder]', error);
+    fail(res, 500, 'Server Error');
+  }
+};
+
+const deleteOrder = async (req, res) => {
+  try {
+    const deleted = await orderModel.deleteOrder(req.params.id);
+
+    if (!deleted) {
+      return fail(res, 404, 'Pesanan tidak ditemukan');
+    }
+
+    success(res, 200, 'Pesanan berhasil dihapus');
+  } catch (error) {
+    console.error('[deleteOrder]', error);
     fail(res, 500, 'Server Error');
   }
 };
@@ -94,4 +125,5 @@ module.exports = {
   getAllOrders,
   createOrder,
   updateOrderStatus,
+  deleteOrder,
 };

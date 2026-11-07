@@ -10,6 +10,7 @@ const API_URL = 'http://localhost:3001/api/orders';
 
 interface PesananOrder {
   id: string;
+  customerId?: string;
   customer: string;
   service: string;
   weight: string;
@@ -21,6 +22,7 @@ interface PesananOrder {
 
 interface ApiOrder {
   id: string;
+  customerId?: string;
   customer: string;
   service: string;
   weight?: number | string;
@@ -118,6 +120,7 @@ const Pesanan: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          customerId: newOrder.customerId,
           customer: newOrder.customer,
           service: newOrder.service,
           date: newOrder.date,
@@ -147,13 +150,28 @@ const Pesanan: React.FC = () => {
     setOrderToDelete(order);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!orderToDelete) return;
 
-    setOrders((current) =>
-      current.filter((order) => order.id !== orderToDelete.id)
-    );
-    setOrderToDelete(null);
+    try {
+      const response = await fetch(`${API_URL}/${orderToDelete.id}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Gagal menghapus pesanan');
+      }
+
+      setOrders((current) =>
+        current.filter((order) => order.id !== orderToDelete.id)
+      );
+      setOrderToDelete(null);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Terjadi kesalahan';
+      window.alert(`Gagal menghapus pesanan: ${message}`);
+    }
   };
 
   const handleSaveStatus = async (id: string, newStatus: string) => {

@@ -123,6 +123,32 @@ const Layanan: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleDelete = async (service: Service) => {
+    if (service.id === undefined) return;
+    if (!window.confirm(`Hapus layanan "${service.name}"?`)) return;
+
+    setApiError('');
+
+    try {
+      const response = await fetch(`${API_URL}/${service.id}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Gagal menghapus layanan');
+      }
+
+      setServices((current) =>
+        current.filter((item) => item.id !== service.id)
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Terjadi kesalahan';
+      setApiError(`Gagal menghapus layanan: ${message}`);
+    }
+  };
+
   const filteredServices =
     filterCategory === 'Semua'
       ? services
@@ -217,6 +243,14 @@ const Layanan: React.FC = () => {
                         >
                           Edit
                         </button>
+                        <button
+                          type="button"
+                          className="btn-icon btn-icon--danger"
+                          title="Hapus Layanan"
+                          onClick={() => handleDelete(service)}
+                        >
+                          Hapus
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -247,4 +281,4 @@ const Layanan: React.FC = () => {
   );
 };
 
-export default Layanan; 
+export default Layanan;

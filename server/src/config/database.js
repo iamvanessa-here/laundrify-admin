@@ -42,6 +42,8 @@ const getAll = (sql) =>
   });
 
 const initializeDatabase = async () => {
+  await runSQL('PRAGMA foreign_keys = ON');
+
   // Jalankan semua perintah dalam init.sql.
   await execSQL(initSQL);
 
@@ -57,6 +59,34 @@ const initializeDatabase = async () => {
     );
     console.log('Kolom weight berhasil ditambahkan ke tabel orders');
   }
+
+  const hasCustomerIdColumn = orderColumns.some(
+    (column) => column.name === 'customer_id'
+  );
+
+  if (!hasCustomerIdColumn) {
+    await runSQL(
+      'ALTER TABLE orders ADD COLUMN customer_id TEXT REFERENCES customers(id)'
+    );
+    console.log('Kolom customer_id berhasil ditambahkan ke tabel orders');
+  }
+
+  // Hubungkan data lama hanya jika nama itu cocok dengan tepat satu pelanggan.
+  await runSQL(`
+    UPDATE orders
+    SET customer_id = (
+      SELECT customers.id
+      FROM customers
+      WHERE customers.name = orders.customer COLLATE NOCASE
+      LIMIT 1
+    )
+    WHERE customer_id IS NULL
+      AND (
+        SELECT COUNT(*)
+        FROM customers
+        WHERE customers.name = orders.customer COLLATE NOCASE
+      ) = 1
+  `);
 };
 
 module.exports = { db, initializeDatabase };

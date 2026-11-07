@@ -30,6 +30,7 @@ app.get('/', (req, res) => {
       'GET    /api/orders': 'Ambil semua pesanan',
       'POST   /api/orders': 'Buat pesanan baru',
       'PUT    /api/orders/:id': 'Update status pesanan',
+      'DELETE /api/orders/:id': 'Hapus pesanan',
 
       'GET    /api/customers': 'Ambil semua pelanggan',
       'POST   /api/customers': 'Buat pelanggan baru',

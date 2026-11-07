@@ -51,9 +51,13 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
     setFormData(normalizedCustomer);
   }, [customer]);
 
-  const hasActiveOrder = orders.some(
-    (order) => order.status === 'Dalam Proses'
-  );
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const latestOrderTime = orders.reduce((latest, order) => {
+    const orderTime = new Date(order.date).getTime();
+    return Number.isNaN(orderTime) ? latest : Math.max(latest, orderTime);
+  }, 0);
+  const isCustomerActive =
+    latestOrderTime > 0 && Date.now() - latestOrderTime <= THIRTY_DAYS_MS;
   const completedOrders = orders.filter(
     (order) => order.status === 'Selesai'
   );
@@ -278,10 +282,10 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
             <h2 className="modal-title">{displayCustomer.name}</h2>
             <span
               className={`status-badge ${
-                hasActiveOrder ? 'status-active' : 'status-inactive'
+                isCustomerActive ? 'status-active' : 'status-inactive'
               }`}
             >
-              {hasActiveOrder ? 'Aktif' : 'Tidak Aktif'}
+              {isCustomerActive ? 'Aktif' : 'Tidak Aktif'}
             </span>
           </div>
 

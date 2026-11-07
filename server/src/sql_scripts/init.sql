@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
+  customer_id TEXT REFERENCES customers(id),
   customer TEXT NOT NULL,
   service TEXT NOT NULL,
   order_date TEXT NOT NULL,
