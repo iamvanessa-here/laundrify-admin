@@ -17,27 +17,39 @@ const db = new sqlite3.Database(dbPath, (err) => {
   console.log('Terhubung ke SQLite:', dbPath);
 });
 
-const runSQL = (query) =>
+const execSQL = (sql) =>
   new Promise((resolve, reject) => {
-    db.run(query, (err) => {
+    db.exec(sql, (err) => {
       if (err) reject(err);
       else resolve();
     });
   });
 
-const getAll = (query) =>
+const runSQL = (sql) =>
   new Promise((resolve, reject) => {
-    db.all(query, (err, rows) => {
+    db.run(sql, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
+const getAll = (sql) =>
+  new Promise((resolve, reject) => {
+    db.all(sql, (err, rows) => {
       if (err) reject(err);
       else resolve(rows);
     });
   });
 
 const initializeDatabase = async () => {
-  await runSQL(initSQL);
+  // Jalankan semua perintah dalam init.sql.
+  await execSQL(initSQL);
 
-  const columns = await getAll('PRAGMA table_info(orders)');
-  const hasWeightColumn = columns.some((column) => column.name === 'weight');
+  // Tambahkan kolom berat untuk database lama, jika belum tersedia.
+  const orderColumns = await getAll('PRAGMA table_info(orders)');
+  const hasWeightColumn = orderColumns.some(
+    (column) => column.name === 'weight'
+  );
 
   if (!hasWeightColumn) {
     await runSQL(

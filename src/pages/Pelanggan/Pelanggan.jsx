@@ -60,9 +60,7 @@ const Pelanggan = () => {
         ]);
 
         if (!customersResponse.ok || !customersResult.success) {
-          throw new Error(
-            customersResult.message || 'Gagal memuat pelanggan'
-          );
+          throw new Error(customersResult.message || 'Gagal memuat pelanggan');
         }
 
         if (!ordersResponse.ok || !ordersResult.success) {
@@ -178,27 +176,59 @@ const Pelanggan = () => {
     }
   };
 
-  const handleUpdateCustomer = (customerId, updatedData) => {
-    setCustomers((currentCustomers) =>
-      currentCustomers.map((customer) =>
-        customer.id === customerId
-          ? { ...customer, ...updatedData }
-          : customer
-      )
-    );
+  const handleUpdateCustomer = async (customerId, updatedData) => {
+    setApiError('');
 
-    setSelectedCustomer((currentCustomer) =>
-      currentCustomer?.id === customerId
-        ? { ...currentCustomer, ...updatedData }
-        : currentCustomer
-    );
+    try {
+      const oldCustomer = customers.find(
+        (customer) => customer.id === customerId
+      );
 
-    setToast({
-      type: 'success',
-      message: 'Data pelanggan berhasil diperbarui!',
-    });
+      const response = await fetch(
+        `${CUSTOMERS_API_URL}/${customerId}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedData),
+        }
+      );
 
-    setTimeout(() => setToast(null), 3000);
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Gagal memperbarui pelanggan');
+      }
+
+      const savedCustomer = result.data;
+
+      setCustomers((currentCustomers) =>
+        currentCustomers.map((customer) =>
+          customer.id === customerId ? savedCustomer : customer
+        )
+      );
+
+      if (oldCustomer && oldCustomer.name !== savedCustomer.name) {
+        setOrders((currentOrders) =>
+          currentOrders.map((order) =>
+            normalizeName(order.customer) === normalizeName(oldCustomer.name)
+              ? { ...order, customer: savedCustomer.name }
+              : order
+          )
+        );
+      }
+
+      setSelectedCustomer(savedCustomer);
+      setToast({
+        type: 'success',
+        message: 'Data pelanggan berhasil diperbarui!',
+      });
+      setTimeout(() => setToast(null), 3000);
+
+      return savedCustomer;
+    } catch (error) {
+      setApiError(`Gagal memperbarui pelanggan: ${error.message}`);
+      throw error;
+    }
   };
 
   return (
@@ -341,9 +371,10 @@ const Pelanggan = () => {
                     customer.name
                   );
 
-                  const totalSpent = customerOrders
-                    .filter((order) => order.status === 'Selesai')
-                    .reduce((sum, order) => sum + Number(order.amount || 0), 0);
+                  const totalSpent = customerOrders.reduce(
+                    (sum, order) => sum + Number(order.amount || 0),
+                    0
+                  );
 
                   return (
                     <tr

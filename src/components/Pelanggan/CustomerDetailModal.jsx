@@ -6,7 +6,6 @@ const CustomerDetailModal = ({ customer, orders, onClose, onUpdate }) => {
   const [formData, setFormData] = useState({ ...customer });
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  
   const [displayCustomer, setDisplayCustomer] = useState({ ...customer });
 
   useEffect(() => {
@@ -14,43 +13,58 @@ const CustomerDetailModal = ({ customer, orders, onClose, onUpdate }) => {
     setFormData({ ...customer });
   }, [customer]);
 
-  const hasActiveOrder = orders.some(o => o.status === 'Dalam Proses');
-  const completedOrders = orders.filter(o => o.status === 'Selesai');
-  const totalSpent = completedOrders.reduce((sum, o) => sum + o.amount, 0);
-  const latestOrder = orders.length > 0 
-    ? orders.reduce((prev, current) => (new Date(prev.date) > new Date(current.date)) ? prev : current) 
-    : null;
+  const hasActiveOrder = orders.some(
+    (order) => order.status === 'Dalam Proses'
+  );
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    
-    // --- PERBAIKAN 1: Validasi WhatsApp hanya boleh angka ---
-    const newValue = name === 'whatsapp' ? value.replace(/\D/g, '') : value;
-    
-    setFormData(prev => ({ ...prev, [name]: newValue }));
+  const completedOrders = orders.filter(
+    (order) => order.status === 'Selesai'
+  );
+
+  const totalSpent = orders.reduce(
+    (sum, order) => sum + Number(order.amount || 0),
+    0
+  );
+
+  const latestOrder =
+    orders.length > 0
+      ? orders.reduce((previous, current) =>
+          new Date(previous.date) > new Date(current.date)
+            ? previous
+            : current
+        )
+      : null;
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    const newValue =
+      name === 'whatsapp' ? value.replace(/\D/g, '') : value;
+
+    setFormData((previous) => ({ ...previous, [name]: newValue }));
+
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((previous) => ({ ...previous, [name]: '' }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.name || formData.name.trim() === '') {
+
+    if (!formData.name || !formData.name.trim()) {
       newErrors.name = 'Nama wajib diisi';
     }
-    
-    if (!formData.email || formData.email.trim() === '') {
+
+    if (!formData.email || !formData.email.trim()) {
       newErrors.email = 'Email wajib diisi';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Format email tidak valid';
     }
-    
-    if (!formData.whatsapp || formData.whatsapp.trim() === '') {
+
+    if (!formData.whatsapp || !formData.whatsapp.trim()) {
       newErrors.whatsapp = 'Nomor WhatsApp wajib diisi';
     }
 
-    if (!formData.address || formData.address.trim() === '') {
+    if (!formData.address || !formData.address.trim()) {
       newErrors.address = 'Alamat wajib diisi';
     }
 
@@ -58,15 +72,23 @@ const CustomerDetailModal = ({ customer, orders, onClose, onUpdate }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
-    if (validateForm()) {
-      setIsSaving(true);
-      setTimeout(() => {
-        onUpdate(customer.id, formData);
-        setDisplayCustomer({ ...formData });
-        setIsSaving(false);
-        setIsEditing(false);
-      }, 600);
+  const handleSave = async () => {
+    if (!validateForm()) return;
+
+    setIsSaving(true);
+
+    try {
+      const savedCustomer = await onUpdate(customer.id, formData);
+      const customerToDisplay = savedCustomer || formData;
+
+      setDisplayCustomer({ ...customerToDisplay });
+      setFormData({ ...customerToDisplay });
+      setErrors({});
+      setIsEditing(false);
+    } catch (error) {
+      window.alert(`Gagal menyimpan perubahan: ${error.message}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -76,62 +98,108 @@ const CustomerDetailModal = ({ customer, orders, onClose, onUpdate }) => {
     setIsEditing(false);
   };
 
-  // --- MODE EDIT ---
   if (isEditing) {
     return (
-      // --- PERBAIKAN 2: Mencegah modal tertutup saat drag/select teks ---
-      <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && handleCancel()}>
+      <div
+        className="modal-overlay"
+        onClick={(event) =>
+          event.target === event.currentTarget && handleCancel()
+        }
+      >
         <div className="modal-content modal-content--md">
           <div className="modal-header">
             <h2 className="modal-title">Edit Data Pelanggan</h2>
-            <button className="modal-close" onClick={handleCancel}>✕</button>
+            <button className="modal-close" onClick={handleCancel}>
+              ✕
+            </button>
           </div>
-          
+
           <div className="edit-form">
             <div className="form-group">
-              <label className="form-label">Nama Pelanggan <span className="required">*</span></label>
-              <input 
-                type="text" name="name" className={`form-input ${errors.name ? 'input-error' : ''}`} 
-                value={formData.name} onChange={handleInputChange} 
+              <label className="form-label">
+                Nama Pelanggan <span className="required">*</span>
+              </label>
+              <input
+                type="text"
+                name="name"
+                className={`form-input ${errors.name ? 'input-error' : ''}`}
+                value={formData.name || ''}
+                onChange={handleInputChange}
               />
-              {errors.name && <span className="error-text">{errors.name}</span>}
+              {errors.name && (
+                <span className="error-text">{errors.name}</span>
+              )}
             </div>
 
             <div className="form-group">
-              <label className="form-label">Email <span className="required">*</span></label>
-              <input 
-                type="email" name="email" className={`form-input ${errors.email ? 'input-error' : ''}`} 
-                value={formData.email} onChange={handleInputChange} 
+              <label className="form-label">
+                Email <span className="required">*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                className={`form-input ${errors.email ? 'input-error' : ''}`}
+                value={formData.email || ''}
+                onChange={handleInputChange}
               />
-              {errors.email && <span className="error-text">{errors.email}</span>}
+              {errors.email && (
+                <span className="error-text">{errors.email}</span>
+              )}
             </div>
 
             <div className="form-group">
-              <label className="form-label">Nomor WhatsApp <span className="required">*</span></label>
-              <input 
-                type="text" 
+              <label className="form-label">
+                Nomor WhatsApp <span className="required">*</span>
+              </label>
+              <input
+                type="text"
                 inputMode="numeric"
-                name="whatsapp" 
-                className={`form-input ${errors.whatsapp ? 'input-error' : ''}`} 
-                value={formData.whatsapp} 
-                onChange={handleInputChange} 
+                name="whatsapp"
+                className={`form-input ${
+                  errors.whatsapp ? 'input-error' : ''
+                }`}
+                value={formData.whatsapp || ''}
+                onChange={handleInputChange}
                 placeholder="Contoh: 08123456789"
               />
-              {errors.whatsapp && <span className="error-text">{errors.whatsapp}</span>}
+              {errors.whatsapp && (
+                <span className="error-text">{errors.whatsapp}</span>
+              )}
             </div>
 
             <div className="form-group">
-              <label className="form-label">Alamat Utama <span className="required">*</span></label>
-              <textarea 
-                name="address" className={`form-input form-textarea ${errors.address ? 'input-error' : ''}`} rows="3"
-                value={formData.address} onChange={handleInputChange} 
+              <label className="form-label">
+                Alamat Utama <span className="required">*</span>
+              </label>
+              <textarea
+                name="address"
+                className={`form-input form-textarea ${
+                  errors.address ? 'input-error' : ''
+                }`}
+                rows="3"
+                value={formData.address || ''}
+                onChange={handleInputChange}
               />
-              {errors.address && <span className="error-text">{errors.address}</span>}
+              {errors.address && (
+                <span className="error-text">{errors.address}</span>
+              )}
             </div>
 
             <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={handleCancel} disabled={isSaving}>Batal</button>
-              <button type="button" className="btn-primary" onClick={handleSave} disabled={isSaving}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
                 {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
               </button>
             </div>
@@ -141,45 +209,94 @@ const CustomerDetailModal = ({ customer, orders, onClose, onUpdate }) => {
     );
   }
 
-  // --- MODE VIEW (DEFAULT) ---
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="modal-overlay"
+      onClick={(event) =>
+        event.target === event.currentTarget && onClose()
+      }
+    >
       <div className="modal-content modal-content--lg">
         <div className="modal-header">
           <div>
             <h2 className="modal-title">{displayCustomer.name}</h2>
-            <span className={`status-badge ${hasActiveOrder ? 'status-active' : 'status-inactive'}`}>
+            <span
+              className={`status-badge ${
+                hasActiveOrder ? 'status-active' : 'status-inactive'
+              }`}
+            >
               {hasActiveOrder ? 'Aktif' : 'Tidak Aktif'}
             </span>
           </div>
+
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="btn-edit" onClick={() => setIsEditing(true)}>
+            <button
+              className="btn-edit"
+              onClick={() => setIsEditing(true)}
+            >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                <path
+                  d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                />
               </svg>
               Edit
             </button>
-            <button className="modal-close" onClick={onClose}>✕</button>
+            <button className="modal-close" onClick={onClose}>
+              ✕
+            </button>
           </div>
         </div>
 
         <div className="detail-section">
           <h3 className="section-title">Informasi Pelanggan</h3>
           <div className="detail-grid">
-            <div className="detail-item"><span className="detail-label">Email</span><span className="detail-value">{displayCustomer.email}</span></div>
-            <div className="detail-item"><span className="detail-label">WhatsApp</span><span className="detail-value">{displayCustomer.whatsapp}</span></div>
-            <div className="detail-item full-width"><span className="detail-label">Alamat</span><span className="detail-value">{displayCustomer.address}</span></div>
-            <div className="detail-item"><span className="detail-label">Tanggal Registrasi</span><span className="detail-value">{displayCustomer.regDate}</span></div>
+            <div className="detail-item">
+              <span className="detail-label">Email</span>
+              <span className="detail-value">{displayCustomer.email}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">WhatsApp</span>
+              <span className="detail-value">{displayCustomer.whatsapp}</span>
+            </div>
+            <div className="detail-item full-width">
+              <span className="detail-label">Alamat</span>
+              <span className="detail-value">{displayCustomer.address}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Tanggal Registrasi</span>
+              <span className="detail-value">{displayCustomer.regDate}</span>
+            </div>
           </div>
         </div>
 
         <div className="detail-section">
           <h3 className="section-title">Statistik Transaksi</h3>
           <div className="stats-row">
-            <div className="mini-stat"><span className="mini-stat-value">{orders.length}</span><span className="mini-stat-label">Total Pesanan</span></div>
-            <div className="mini-stat"><span className="mini-stat-value">Rp {totalSpent.toLocaleString('id-ID')}</span><span className="mini-stat-label">Total Transaksi</span></div>
-            <div className="mini-stat"><span className="mini-stat-value">{completedOrders.length}</span><span className="mini-stat-label">Transaksi Selesai</span></div>
-            <div className="mini-stat"><span className="mini-stat-value">{latestOrder ? latestOrder.date : '-'}</span><span className="mini-stat-label">Transaksi Terakhir</span></div>
+            <div className="mini-stat">
+              <span className="mini-stat-value">{orders.length}</span>
+              <span className="mini-stat-label">Total Pesanan</span>
+            </div>
+            <div className="mini-stat">
+              <span className="mini-stat-value">
+                Rp {totalSpent.toLocaleString('id-ID')}
+              </span>
+              <span className="mini-stat-label">Total Transaksi</span>
+            </div>
+            <div className="mini-stat">
+              <span className="mini-stat-value">
+                {completedOrders.length}
+              </span>
+              <span className="mini-stat-label">Transaksi Selesai</span>
+            </div>
+            <div className="mini-stat">
+              <span className="mini-stat-value">
+                {latestOrder ? latestOrder.date : '-'}
+              </span>
+              <span className="mini-stat-label">Transaksi Terakhir</span>
+            </div>
           </div>
         </div>
 
@@ -191,13 +308,26 @@ const CustomerDetailModal = ({ customer, orders, onClose, onUpdate }) => {
                 <span className="order-id">{latestOrder.id}</span>
                 <span className="order-date">{latestOrder.date}</span>
                 <span className="order-service">{latestOrder.service}</span>
-                <span className={`badge badge--${latestOrder.status === 'Selesai' ? 'success' : 'info'}`}>{latestOrder.status}</span>
-                <span className="order-amount">Rp {latestOrder.amount.toLocaleString('id-ID')}</span>
+                <span
+                  className={`badge badge--${
+                    latestOrder.status === 'Selesai' ? 'success' : 'info'
+                  }`}
+                >
+                  {latestOrder.status}
+                </span>
+                <span className="order-amount">
+                  Rp {Number(latestOrder.amount).toLocaleString('id-ID')}
+                </span>
               </div>
             </div>
           </div>
         )}
-        {!latestOrder && <div className="empty-state">Pelanggan ini belum memiliki riwayat pesanan.</div>}
+
+        {!latestOrder && (
+          <div className="empty-state">
+            Pelanggan ini belum memiliki riwayat pesanan.
+          </div>
+        )}
       </div>
     </div>
   );

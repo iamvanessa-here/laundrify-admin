@@ -32,7 +32,7 @@ const createCustomer = async (req, res) => {
     }
 
     if (typeof whatsapp !== 'string' || !whatsapp.trim()) {
-      return fail(res, 400, 'Validasi gagal', 'Nomor WhatsApp wajib diisi');
+      return fail(res, 400, 'Validasi gagal', 'WhatsApp wajib diisi');
     }
 
     const customer = await customerModel.createCustomer({
@@ -54,7 +54,48 @@ const createCustomer = async (req, res) => {
   }
 };
 
+const updateCustomer = async (req, res) => {
+  try {
+    const { name, email, whatsapp, address } = req.body || {};
+
+    if (typeof name !== 'string' || !name.trim()) {
+      return fail(res, 400, 'Validasi gagal', 'Nama wajib diisi');
+    }
+
+    if (
+      typeof email !== 'string' ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+    ) {
+      return fail(res, 400, 'Validasi gagal', 'Format email tidak valid');
+    }
+
+    if (typeof whatsapp !== 'string' || !whatsapp.trim()) {
+      return fail(res, 400, 'Validasi gagal', 'WhatsApp wajib diisi');
+    }
+
+    const customer = await customerModel.updateCustomer(
+      req.params.id,
+      { name, email, whatsapp, address }
+    );
+
+    if (!customer) {
+      return fail(res, 404, 'Pelanggan tidak ditemukan');
+    }
+
+    success(res, 200, 'Data pelanggan berhasil diperbarui', customer);
+  } catch (error) {
+    console.error('[updateCustomer]', error);
+
+    if (error.code === 'SQLITE_CONSTRAINT') {
+      return fail(res, 409, 'Email atau WhatsApp sudah terdaftar');
+    }
+
+    fail(res, 500, 'Server Error');
+  }
+};
+
 module.exports = {
   getAllCustomers,
   createCustomer,
+  updateCustomer,
 };

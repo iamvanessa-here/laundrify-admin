@@ -4,5 +4,6 @@ const customerController = require('../controllers/customerController');
 
 router.get('/', customerController.getAllCustomers);
 router.post('/', customerController.createCustomer);
+router.put('/:id', customerController.updateCustomer);
 
 module.exports = router;
