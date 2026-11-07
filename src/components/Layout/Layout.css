@@ -30,7 +30,6 @@
   z-index: 90;
 }
 
-/* ===== Tablet ===== */
 @media (max-width: 1024px) {
   .layout__main {
     margin-left: 0;
@@ -40,8 +39,6 @@
     display: block;
   }
 }
-
-/* ===== Mobile ===== */
 @media (max-width: 768px) {
   .layout__content {
     padding: var(--spacing-md);

@@ -22,7 +22,7 @@
 }
 
 .modal-content--sm {
-  max-width: 400px; /* Lebih kompak untuk edit status */
+  max-width: 400px;
 }
 
 @keyframes slideUp {

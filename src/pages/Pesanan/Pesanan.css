@@ -5,8 +5,6 @@
   max-width: 1400px;
 }
 
-/* Action Bar */
-/* Pastikan bagian ini ada di Pesanan.css */
 .pesanan__actions {
   display: flex;
   justify-content: space-between;
@@ -46,7 +44,6 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Responsive adjustment untuk search bar */
 @media (max-width: 768px) {
   .pesanan__actions {
     flex-direction: column;
@@ -60,7 +57,7 @@
 .filter-tabs {
   display: flex;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md); /* <-- Reduced to 16px for a tighter look */
+  margin-bottom: var(--spacing-md);
   border-bottom: 1px solid var(--color-border);
   padding-bottom: var(--spacing-sm);
 }
@@ -199,13 +196,11 @@
 .text-muted { color: var(--color-text-muted); }
 .text-center { text-align: center; }
 
-/* Action Buttons in Table */
 .action-buttons {
   display: flex;
   gap: 4px;
 }
 
-/* Empty State */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -222,7 +217,6 @@
   font-weight: 500;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .pesanan__actions {
     flex-direction: column;

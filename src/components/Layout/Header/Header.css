@@ -98,7 +98,6 @@
   line-height: 1.2;
 }
 
-/* ===== Responsive ===== */
 @media (max-width: 1024px) {
   .header__menu-btn {
     display: flex;
