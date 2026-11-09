@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import ServiceModal from '../../components/Layanan/ServiceModal';
+import DeleteConfirmModal from '../Pesanan/DeleteConfirmModal';
 import { authHeader } from '../../api/client';
 import './Layanan.css';
 
@@ -44,6 +45,8 @@ const Layanan: React.FC = () => {
   const [apiError, setApiError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [filterCategory, setFilterCategory] = useState('Semua');
 
   useEffect(() => {
@@ -124,14 +127,14 @@ const Layanan: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (service: Service) => {
-    if (service.id === undefined) return;
-    if (!window.confirm(`Hapus layanan "${service.name}"?`)) return;
+  const handleDelete = async () => {
+    if (serviceToDelete?.id === undefined || isDeleting) return;
 
     setApiError('');
+    setIsDeleting(true);
 
     try {
-      const response = await fetch(`${API_URL}/${service.id}`, {
+      const response = await fetch(`${API_URL}/${serviceToDelete.id}`, {
         method: 'DELETE',
         headers: authHeader(),
       });
@@ -142,12 +145,15 @@ const Layanan: React.FC = () => {
       }
 
       setServices((current) =>
-        current.filter((item) => item.id !== service.id)
+        current.filter((item) => item.id !== serviceToDelete.id)
       );
+      setServiceToDelete(null);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Terjadi kesalahan';
       setApiError(`Gagal menghapus layanan: ${message}`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -249,7 +255,7 @@ const Layanan: React.FC = () => {
                           type="button"
                           className="btn-icon btn-icon--danger"
                           title="Hapus Layanan"
-                          onClick={() => handleDelete(service)}
+                          onClick={() => setServiceToDelete(service)}
                         >
                           Hapus
                         </button>
@@ -278,6 +284,17 @@ const Layanan: React.FC = () => {
         }}
         onSave={handleSaveService}
         initialData={editingService}
+      />
+
+      <DeleteConfirmModal
+        isOpen={!!serviceToDelete}
+        itemName={serviceToDelete?.name || ''}
+        itemLabel="layanan"
+        isLoading={isDeleting}
+        onClose={() => {
+          if (!isDeleting) setServiceToDelete(null);
+        }}
+        onConfirm={handleDelete}
       />
     </div>
   );

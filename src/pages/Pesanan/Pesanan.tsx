@@ -366,7 +366,7 @@ const Pesanan: React.FC = () => {
 
       <DeleteConfirmModal
         isOpen={!!orderToDelete}
-        orderId={orderToDelete?.id || ''}
+        itemName={orderToDelete?.id || ''}
         onClose={() => setOrderToDelete(null)}
         onConfirm={handleConfirmDelete}
       />

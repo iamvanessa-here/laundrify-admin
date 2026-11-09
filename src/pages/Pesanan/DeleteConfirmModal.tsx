@@ -5,15 +5,19 @@ import './DeleteConfirmModal.css';
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
-  orderId: string | number;
+  onConfirm: () => void | Promise<void>;
+  itemName: string | number;
+  itemLabel?: string;
+  isLoading?: boolean;
 }
 
 const DeleteConfirmModal = ({
   isOpen,
   onClose,
   onConfirm,
-  orderId,
+  itemName,
+  itemLabel = 'pesanan',
+  isLoading = false,
 }: DeleteConfirmModalProps) => {
   useEffect(() => {
     if (!isOpen) return;
@@ -59,21 +63,21 @@ const DeleteConfirmModal = ({
 
         {/* Text Content */}
         <h3 id="delete-modal-title" className="delete-modal__title">
-          Hapus Pesanan?
+          Hapus {itemLabel.charAt(0).toUpperCase() + itemLabel.slice(1)}?
         </h3>
         <p className="delete-modal__message">
-          Apakah Anda yakin ingin menghapus pesanan{' '}
-          <span className="font-semibold text-primary">{orderId}</span>? Pesanan yang telah
+          Apakah Anda yakin ingin menghapus {itemLabel}{' '}
+          <span className="font-semibold text-primary">{itemName}</span>? Data yang telah
           dihapus tidak dapat dikembalikan.
         </p>
 
         {/* Action Buttons */}
         <div className="delete-modal__actions">
-          <button type="button" className="btn-cancel" onClick={onClose}>
+          <button type="button" className="btn-cancel" onClick={onClose} disabled={isLoading}>
             Batal
           </button>
-          <button type="button" className="btn-delete" onClick={onConfirm}>
-            Ya, Hapus
+          <button type="button" className="btn-delete" onClick={onConfirm} disabled={isLoading}>
+            {isLoading ? 'Menghapus...' : 'Ya, Hapus'}
           </button>
         </div>
       </div>
