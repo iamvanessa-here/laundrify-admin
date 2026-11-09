@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { authHeader } from '../../api/client';
 import './OrderModal.css';
 
 const CUSTOMERS_API_URL = 'http://localhost:3001/api/customers';
@@ -74,8 +75,8 @@ const OrderModal: React.FC<OrderModalProps> = ({ onClose, onAdd }) => {
     const loadFormOptions = async () => {
       try {
         const [customersResponse, servicesResponse] = await Promise.all([
-          fetch(CUSTOMERS_API_URL),
-          fetch(SERVICES_API_URL),
+          fetch(CUSTOMERS_API_URL, { headers: authHeader() }),
+          fetch(SERVICES_API_URL, { headers: authHeader() }),
         ]);
 
         const [customersResult, servicesResult] = await Promise.all([

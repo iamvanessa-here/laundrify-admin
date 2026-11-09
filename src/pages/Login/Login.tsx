@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE, setToken } from '../../api/client';
 import './Login.css';
 
 const Login = () => {
@@ -8,14 +9,29 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (username === 'admin' && password === 'admin123') {
-      localStorage.setItem('laundrify_auth', 'true');
-      navigate('/', { replace: true });
-    } else {
-      setError('Username atau password salah!');
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        setToken(result.data.token);
+        setUsername('');
+        setPassword('');
+        navigate('/', { replace: true });
+      } else if (response.status === 401) {
+        setError('Username atau password salah!');
+      } else {
+        setError(result.error || result.message);
+      }
+    } catch {
+      setError('Tidak dapat terhubung ke server.');
     }
   };
 
@@ -41,6 +57,7 @@ const Login = () => {
             <label className="form-label">Username</label>
             <input
               type="text"
+              autoComplete="off"
               className="form-input"
               value={username}
               onChange={(e) => {
@@ -56,6 +73,7 @@ const Login = () => {
             <label className="form-label">Password</label>
             <input
               type="password"
+              autoComplete="new-password"
               className="form-input"
               value={password}
               onChange={(e) => {

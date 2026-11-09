@@ -4,6 +4,7 @@ import Badge, { BadgeVariant } from '../../components/ui/Badge';
 import OrderModal from '../../pages/Pesanan/OrderModal';
 import EditStatusModal from '../../pages/Pesanan/EditStatusModal';
 import DeleteConfirmModal from '../../pages/Pesanan/DeleteConfirmModal';
+import { authHeader } from '../../api/client';
 import './Pesanan.css';
 
 const API_URL = 'http://localhost:3001/api/orders';
@@ -86,7 +87,7 @@ const Pesanan: React.FC = () => {
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, { headers: authHeader() });
         const result = await response.json();
 
         if (!response.ok || !result.success) {
@@ -118,7 +119,7 @@ const Pesanan: React.FC = () => {
 
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({
           customerId: newOrder.customerId,
           customer: newOrder.customer,
@@ -156,6 +157,7 @@ const Pesanan: React.FC = () => {
     try {
       const response = await fetch(`${API_URL}/${orderToDelete.id}`, {
         method: 'DELETE',
+        headers: authHeader(),
       });
       const result = await response.json();
 
@@ -178,7 +180,7 @@ const Pesanan: React.FC = () => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({ status: newStatus }),
       });
 

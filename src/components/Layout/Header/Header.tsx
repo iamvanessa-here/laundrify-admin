@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { API_BASE, getToken, clearToken } from '../../../api/client';
 import './Header.css';
 
 export interface HeaderProps {
@@ -17,8 +18,16 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     return 'Pesanan';
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('laundrify_auth');
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+    } catch {
+      // Server tidak terjangkau: tetap keluar di sisi browser.
+    }
+    clearToken();
     navigate('/login', { replace: true });
   };
 

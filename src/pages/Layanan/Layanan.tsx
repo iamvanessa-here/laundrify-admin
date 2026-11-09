@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import ServiceModal from '../../components/Layanan/ServiceModal';
+import { authHeader } from '../../api/client';
 import './Layanan.css';
 
 const API_URL = 'http://localhost:3001/api/services';
@@ -48,7 +49,7 @@ const Layanan: React.FC = () => {
   useEffect(() => {
     const loadServices = async () => {
       try {
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, { headers: authHeader() });
         const result = await response.json();
 
         if (!response.ok || !result.success) {
@@ -79,7 +80,7 @@ const Layanan: React.FC = () => {
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({
           name: data.name.trim(),
           description: data.description || '',
@@ -132,6 +133,7 @@ const Layanan: React.FC = () => {
     try {
       const response = await fetch(`${API_URL}/${service.id}`, {
         method: 'DELETE',
+        headers: authHeader(),
       });
       const result = await response.json();
 

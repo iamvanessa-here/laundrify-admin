@@ -5,6 +5,7 @@ import AddCustomerModal from '../../components/Pelanggan/AddCustomerModal';
 import CustomerDetailModal from '../../components/Pelanggan/CustomerDetailModal';
 import Pagination from '../../components/Pelanggan/Pagination';
 import type { Customer, Order, ToastState } from '../../types';
+import { authHeader } from '../../api/client';
 import './Pelanggan.css';
 
 const CUSTOMERS_API_URL = 'http://localhost:3001/api/customers';
@@ -79,8 +80,8 @@ const Pelanggan = () => {
     const loadData = async () => {
       try {
         const [customersResponse, ordersResponse] = await Promise.all([
-          fetch(CUSTOMERS_API_URL),
-          fetch(ORDERS_API_URL),
+          fetch(CUSTOMERS_API_URL, { headers: authHeader() }),
+          fetch(ORDERS_API_URL, { headers: authHeader() }),
         ]);
 
         const [customersResult, ordersResult] = await Promise.all([
@@ -186,7 +187,7 @@ const Pelanggan = () => {
     try {
       const response = await fetch(CUSTOMERS_API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify(newCustomer),
       });
 
@@ -219,7 +220,7 @@ const Pelanggan = () => {
 
       const response = await fetch(`${CUSTOMERS_API_URL}/${customerId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify(updatedData),
       });
 

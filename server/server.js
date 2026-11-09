@@ -1,7 +1,11 @@
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const { initializeDatabase } = require('./src/config/database');
+
+const { requireAuth } = require('./src/middlewares_helpers/authMiddleware');
+const authRoutes = require('./src/routes/authRoutes');
 const testRoutes = require('./src/routes/test');
 const productRoutes = require('./src/routes/productRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
@@ -9,7 +13,7 @@ const customerRoutes = require('./src/routes/customerRoutes');
 const serviceRoutes = require('./src/routes/serviceRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 /* Middleware */
 app.use(cors());
@@ -21,9 +25,13 @@ app.get('/', (req, res) => {
   res.json({
     message: '🚀 Laundrify API is running',
     endpoints: {
+      'POST   /api/auth/login': 'Login dengan username dan password',
+      'POST   /api/auth/logout': 'Logout dengan Bearer token',
+
       'GET    /api/products': 'Ambil semua produk',
       'GET    /api/products/:id': 'Ambil produk berdasarkan ID',
       'POST   /api/products': 'Buat produk baru',
+      'POST   /api/products/bulk': 'Buat beberapa produk',
       'PUT    /api/products/:id': 'Update produk',
       'DELETE /api/products/:id': 'Hapus produk',
 
@@ -34,6 +42,7 @@ app.get('/', (req, res) => {
 
       'GET    /api/customers': 'Ambil semua pelanggan',
       'POST   /api/customers': 'Buat pelanggan baru',
+      'PUT    /api/customers/:id': 'Update data pelanggan',
 
       'GET    /api/services': 'Ambil semua layanan',
       'GET    /api/services/:id': 'Ambil layanan berdasarkan ID',
@@ -44,12 +53,15 @@ app.get('/', (req, res) => {
   });
 });
 
-/* Routes */
+/* Routes publik */
+app.use('/api/auth', authRoutes);
 app.use('/api/test', testRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/services', serviceRoutes);
+
+/* Routes yang memerlukan token login */
+app.use('/api/products', requireAuth, productRoutes);
+app.use('/api/orders', requireAuth, orderRoutes);
+app.use('/api/customers', requireAuth, customerRoutes);
+app.use('/api/services', requireAuth, serviceRoutes);
 
 /* 404 */
 app.use((req, res) => {
@@ -59,10 +71,11 @@ app.use((req, res) => {
   });
 });
 
-/* Start */
+/* Start server */
 (async () => {
   try {
     await initializeDatabase();
+
     app.listen(PORT, () => {
       console.log(`🚀 Server: http://localhost:${PORT}`);
     });
